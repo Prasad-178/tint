@@ -12,11 +12,16 @@ import { Shield, Lock, Zap, Eye } from "lucide-react";
 
 export function Dashboard() {
   const { connected } = useWallet();
+  
+  // Shield modal can be triggered from:
+  // 1. Public balance (shows transfer instructions)
+  // 2. Session wallet (actually shields)
   const [shieldModal, setShieldModal] = useState<{
     isOpen: boolean;
     tokenMint: string;
     amount: number;
-  }>({ isOpen: false, tokenMint: "", amount: 0 });
+    isFromSession: boolean;
+  }>({ isOpen: false, tokenMint: "", amount: 0, isFromSession: false });
 
   const [withdrawModal, setWithdrawModal] = useState<{
     isOpen: boolean;
@@ -24,8 +29,14 @@ export function Dashboard() {
     amount: number;
   }>({ isOpen: false, tokenMint: "", amount: 0 });
 
-  const handleShieldClick = (tokenMint: string, amount: number) => {
-    setShieldModal({ isOpen: true, tokenMint, amount });
+  // Called when clicking Shield from public balance - shows instructions
+  const handleShieldFromPublicClick = (tokenMint: string, amount: number) => {
+    setShieldModal({ isOpen: true, tokenMint, amount, isFromSession: false });
+  };
+
+  // Called when clicking Shield from session wallet - actually shields
+  const handleShieldFromSessionClick = (tokenMint: string, amount: number) => {
+    setShieldModal({ isOpen: true, tokenMint, amount, isFromSession: true });
   };
 
   const handleWithdrawClick = (tokenMint: string, amount: number) => {
@@ -74,8 +85,11 @@ export function Dashboard() {
     <div className="space-y-6">
       {/* Balance Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PublicBalance onShieldClick={handleShieldClick} />
-        <ShieldedBalance onWithdrawClick={handleWithdrawClick} />
+        <PublicBalance onShieldClick={handleShieldFromPublicClick} />
+        <ShieldedBalance 
+          onWithdrawClick={handleWithdrawClick} 
+          onShieldFromSessionClick={handleShieldFromSessionClick}
+        />
       </div>
 
       {/* Proof of Funds */}
@@ -87,9 +101,10 @@ export function Dashboard() {
       {/* Modals */}
       <ShieldModal
         isOpen={shieldModal.isOpen}
-        onClose={() => setShieldModal({ isOpen: false, tokenMint: "", amount: 0 })}
+        onClose={() => setShieldModal({ isOpen: false, tokenMint: "", amount: 0, isFromSession: false })}
         tokenMint={shieldModal.tokenMint}
         maxAmount={shieldModal.amount}
+        isFromSession={shieldModal.isFromSession}
       />
       <WithdrawModal
         isOpen={withdrawModal.isOpen}

@@ -8,7 +8,7 @@ import { RefreshCw, Eye, AlertTriangle, ArrowRight } from "lucide-react";
 import { formatUSD, calculatePrivacyScore } from "@/lib/utils";
 import { useAppStore } from "@/store";
 import { useWallet } from "@solana/wallet-adapter-react";
-import type { PublicBalance as PublicBalanceType, ShieldedBalance } from "@/types";
+import type { ShieldedBalance } from "@/types";
 
 interface PublicBalanceProps {
   onShieldClick: (tokenMint: string, amount: number) => void;
