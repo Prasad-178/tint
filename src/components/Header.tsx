@@ -15,7 +15,7 @@ export function Header() {
             <Shield className="relative h-8 w-8 text-emerald-500" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-            Whale Wallet
+            Tint
           </span>
         </Link>
 

@@ -13,10 +13,10 @@ import type { TokenInfo, ShieldedBalance } from "@/types";
 export const PRIVACY_CASH_SIGN_MESSAGE = "Privacy Money account sign in";
 
 // Session keypair derivation message
-export const SESSION_KEYPAIR_MESSAGE = "Whale Wallet Session Key Derivation";
+export const SESSION_KEYPAIR_MESSAGE = "Tint Session Key Derivation";
 
 // LocalStorage key prefix for session signatures
-const SESSION_STORAGE_KEY_PREFIX = "whale_wallet_session_";
+const SESSION_STORAGE_KEY_PREFIX = "tint_session_";
 
 /**
  * Derives a deterministic session keypair from a wallet signature

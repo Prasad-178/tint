@@ -1,22 +1,22 @@
-# Whale Wallet - Private Portfolio Manager
+# Tint - Private Portfolio Manager
 
 > **"Your holdings. Your secret."**
 
-A privacy-focused crypto portfolio manager built on Solana using the Privacy.cash SDK. Whale Wallet allows users to deposit, view, and withdraw crypto without anyone knowing their balance or address.
+A privacy-focused crypto portfolio manager built on Solana using the Privacy.cash SDK. Tint allows users to deposit, view, and withdraw crypto without anyone knowing their balance or address.
 
-![Whale Wallet](https://img.shields.io/badge/Solana-Privacy-emerald)
+![Tint](https://img.shields.io/badge/Solana-Privacy-emerald)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## The Problem
 
-- Whale wallets are tracked by thousands of copy-traders and analysts
+- Large wallets are tracked by thousands of copy-traders and analysts
 - KOLs can't accumulate without moving markets
 - High-net-worth holders become targets for phishing and social engineering
 - Portfolio composition reveals trading strategies to competitors
 
 ## The Solution
 
-Whale Wallet provides a dashboard for managing crypto holdings privately:
+Tint provides a dashboard for managing crypto holdings privately:
 - **Shield tokens** - One-click deposit to a shielded pool
 - **Private balances** - Only you can see your holdings
 - **Stealth withdrawals** - Withdraw to any address with no trace
@@ -64,8 +64,8 @@ Whale Wallet provides a dashboard for managing crypto holdings privately:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/whale-wallet.git
-cd whale-wallet
+git clone https://github.com/yourusername/tint.git
+cd tint
 
 # Install dependencies
 npm install
@@ -160,4 +160,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Whale Wallet** - Your holdings. Your secret.
+**Tint** - Your holdings. Your secret.

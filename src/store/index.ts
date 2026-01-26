@@ -77,7 +77,7 @@ export const useAppStore = create<AppState>()(
       reset: () => set(initialState),
     }),
     {
-      name: "whale-wallet-storage",
+      name: "tint-storage",
       partialize: (state) => ({
         transactions: state.transactions,
         proofs: state.proofs,

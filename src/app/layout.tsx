@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Whale Wallet — Private Portfolio Manager",
+  title: "Tint — Private Portfolio Manager",
   description:
     "Your holdings. Your secret. Manage your crypto privately with shielded balances on Solana.",
   keywords: [
@@ -27,20 +27,20 @@ export const metadata: Metadata = {
     "privacy",
     "crypto",
     "wallet",
-    "whale",
+    "tint",
     "portfolio",
     "shielded",
     "private",
   ],
   openGraph: {
-    title: "Whale Wallet — Private Portfolio Manager",
+    title: "Tint — Private Portfolio Manager",
     description:
       "Your holdings. Your secret. Manage your crypto privately with shielded balances on Solana.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Whale Wallet — Private Portfolio Manager",
+    title: "Tint — Private Portfolio Manager",
     description:
       "Your holdings. Your secret. Manage your crypto privately with shielded balances on Solana.",
   },
