@@ -1,0 +1,220 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+:root {
+  --radius: 0.75rem;
+  
+  /* Dark theme by default - professional look */
+  --background: oklch(0.13 0.01 260);
+  --foreground: oklch(0.97 0 0);
+  
+  --card: oklch(0.16 0.01 260);
+  --card-foreground: oklch(0.97 0 0);
+  
+  --popover: oklch(0.16 0.01 260);
+  --popover-foreground: oklch(0.97 0 0);
+  
+  --primary: oklch(0.72 0.19 165);
+  --primary-foreground: oklch(0.13 0.01 260);
+  
+  --secondary: oklch(0.22 0.01 260);
+  --secondary-foreground: oklch(0.97 0 0);
+  
+  --muted: oklch(0.22 0.01 260);
+  --muted-foreground: oklch(0.60 0.01 260);
+  
+  --accent: oklch(0.72 0.19 165);
+  --accent-foreground: oklch(0.13 0.01 260);
+  
+  --destructive: oklch(0.65 0.25 25);
+  --destructive-foreground: oklch(0.97 0 0);
+  
+  --border: oklch(0.28 0.01 260);
+  --input: oklch(0.28 0.01 260);
+  --ring: oklch(0.72 0.19 165);
+}
+
+/* Light theme */
+.light {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.13 0.01 260);
+  
+  --card: oklch(0.99 0 0);
+  --card-foreground: oklch(0.13 0.01 260);
+  
+  --popover: oklch(0.99 0 0);
+  --popover-foreground: oklch(0.13 0.01 260);
+  
+  --primary: oklch(0.55 0.19 165);
+  --primary-foreground: oklch(0.99 0 0);
+  
+  --secondary: oklch(0.95 0.01 260);
+  --secondary-foreground: oklch(0.13 0.01 260);
+  
+  --muted: oklch(0.95 0.01 260);
+  --muted-foreground: oklch(0.45 0.01 260);
+  
+  --accent: oklch(0.55 0.19 165);
+  --accent-foreground: oklch(0.99 0 0);
+  
+  --destructive: oklch(0.55 0.25 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  
+  --border: oklch(0.88 0.01 260);
+  --input: oklch(0.88 0.01 260);
+  --ring: oklch(0.55 0.19 165);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Selection */
+::selection {
+  background: oklch(0.72 0.19 165 / 0.3);
+}
+
+/* Wallet adapter modal customization */
+.wallet-adapter-modal-wrapper {
+  background: var(--background) !important;
+}
+
+.wallet-adapter-modal {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+}
+
+.wallet-adapter-modal-title {
+  color: var(--foreground) !important;
+}
+
+.wallet-adapter-modal-list li {
+  background: var(--muted) !important;
+  border-radius: calc(var(--radius) - 2px) !important;
+}
+
+.wallet-adapter-modal-list li:hover {
+  background: var(--secondary) !important;
+}
+
+.wallet-adapter-button {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-radius: calc(var(--radius) - 2px) !important;
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, oklch(0.72 0.19 165), oklch(0.65 0.17 185));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effects */
+.glow-emerald {
+  box-shadow: 0 0 20px oklch(0.72 0.19 165 / 0.3);
+}
+
+.glow-teal {
+  box-shadow: 0 0 20px oklch(0.65 0.17 185 / 0.3);
+}
+
+/* Animations */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Background pattern */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, oklch(0.28 0.01 260 / 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.28 0.01 260 / 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Glass effect */
+.glass {
+  background: oklch(0.16 0.01 260 / 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.28 0.01 260 / 0.5);
+}
