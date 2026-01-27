@@ -66,7 +66,7 @@ export function PublicBalance({ onShieldClick }: PublicBalanceProps) {
             {balances.filter((b) => b.amount > 0).map((balance) => (
               <div
                 key={balance.token.mint}
-                className="flex items-center justify-between py-2 group"
+                className="flex items-center justify-between py-2"
               >
                 <div className="flex items-center gap-3">
                   {balance.token.logoURI ? (
@@ -91,9 +91,9 @@ export function PublicBalance({ onShieldClick }: PublicBalanceProps) {
                     </p>
                   </div>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                    className="h-7 px-2 text-xs"
                     onClick={() => onShieldClick(balance.token.mint, balance.amount)}
                   >
                     Shield

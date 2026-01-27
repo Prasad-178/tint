@@ -121,7 +121,7 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
             {shieldedBalances.filter(b => b.amount > 0).map((balance) => (
               <div
                 key={balance.token.mint}
-                className="flex items-center justify-between py-2 group"
+                className="flex items-center justify-between py-2"
               >
                 <div className="flex items-center gap-3">
                   {balance.token.logoURI ? (
@@ -142,9 +142,9 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
                     {balance.amount.toLocaleString("en-US", { maximumFractionDigits: 4 })}
                   </p>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                    className="h-7 px-2 text-xs"
                     onClick={() => onWithdrawClick(balance.token.mint, balance.amount)}
                   >
                     <ArrowUp className="h-3 w-3 mr-1" />
@@ -199,7 +199,7 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
                 {sessionBalances.filter(b => b.amount > 0).map((balance) => (
                   <div
                     key={balance.token.mint}
-                    className="flex items-center justify-between py-1.5 group"
+                    className="flex items-center justify-between py-1.5"
                   >
                     <div className="flex items-center gap-2">
                       {balance.token.logoURI ? (
@@ -217,9 +217,9 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
                       </span>
                       {balance.token.symbol !== "SOL" && (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          className="h-6 px-2 text-[10px] opacity-0 group-hover:opacity-100"
+                          className="h-6 px-2 text-[10px]"
                           onClick={() => onShieldFromSessionClick(balance.token.mint, balance.amount)}
                           disabled={!hasSolForFees}
                         >
