@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { WalletButton } from "@/components/wallet/WalletButton";
-import { Shield, Github, Twitter, ExternalLink } from "lucide-react";
+import { Shield } from "lucide-react";
 
 export function Header() {
   return (
@@ -18,35 +18,6 @@ export function Header() {
             Tint
           </span>
         </Link>
-
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link
-            href="https://docs.privacycash.co"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-          >
-            Docs
-            <ExternalLink className="h-3 w-3" />
-          </Link>
-          <Link
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Github className="h-5 w-5" />
-          </Link>
-          <Link
-            href="https://twitter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Twitter className="h-5 w-5" />
-          </Link>
-        </nav>
 
         {/* Wallet Button */}
         <WalletButton />

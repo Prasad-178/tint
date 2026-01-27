@@ -18,10 +18,11 @@ import { formatUSD, generateUUID } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 
 const THRESHOLD_OPTIONS = [
+  { label: "$10", value: 10 },
+  { label: "$100", value: 100 },
+  { label: "$500", value: 500 },
   { label: "$1K", value: 1000 },
   { label: "$10K", value: 10000 },
-  { label: "$100K", value: 100000 },
-  { label: "$1M", value: 1000000 },
 ];
 
 export function ProofOfFunds() {

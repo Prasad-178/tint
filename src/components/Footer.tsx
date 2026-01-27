@@ -19,13 +19,12 @@ export function Footer() {
           {/* Links */}
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link
-              href="https://privacycash.co"
+              href="https://docs.privacycash.co"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors flex items-center gap-1"
+              className="hover:text-foreground transition-colors"
             >
-              Powered by Privacy.cash
-              <ExternalLink className="h-3 w-3" />
+              Docs
             </Link>
             <Link
               href="https://github.com"
@@ -42,6 +41,16 @@ export function Footer() {
               className="hover:text-foreground transition-colors"
             >
               <Twitter className="h-4 w-4" />
+            </Link>
+            <span className="text-muted-foreground/50">|</span>
+            <Link
+              href="https://privacycash.co"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              Powered by Privacy.cash
+              <ExternalLink className="h-3 w-3" />
             </Link>
           </div>
         </div>
