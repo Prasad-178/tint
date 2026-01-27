@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { SUPPORTED_TOKENS } from "@/lib/solana/constants";
 import { initializePrivacyClient, privacyClient } from "@/lib/privacy";
@@ -21,6 +21,7 @@ export function useShieldedBalance(): {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const { shieldedBalances, setShieldedBalances } = useAppStore();
+  const hasFetchedOnce = useRef(false);
 
   // Initialize privacy client when wallet connects
   useEffect(() => {
@@ -48,10 +49,16 @@ export function useShieldedBalance(): {
         return;
       }
 
-      setIsLoading(true);
+      // Only show loading on first fetch
+      const isFirstFetch = shieldedBalances.length === 0 && !hasFetchedOnce.current;
+      if (isFirstFetch) {
+        setIsLoading(true);
+      }
+
       try {
         const balances = await privacyClient.getAllShieldedBalances(SUPPORTED_TOKENS);
         setShieldedBalances(balances);
+        hasFetchedOnce.current = true;
       } catch (error) {
         console.error("Error fetching shielded balances:", error);
       } finally {

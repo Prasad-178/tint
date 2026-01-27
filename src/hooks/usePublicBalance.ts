@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
@@ -17,11 +17,17 @@ export function usePublicBalance(): {
   const { connection } = useConnection();
   const [isLoading, setIsLoading] = useState(false);
   const { publicBalances, setPublicBalances } = useAppStore();
+  const hasFetchedOnce = useRef(false);
 
   const fetchBalances = useCallback(async () => {
     if (!connected || !publicKey) return;
 
-    setIsLoading(true);
+    // Only show loading on first fetch, not on refreshes
+    const isFirstFetch = publicBalances.length === 0 && !hasFetchedOnce.current;
+    if (isFirstFetch) {
+      setIsLoading(true);
+    }
+
     try {
       const balances: PublicBalance[] = [];
 
@@ -30,7 +36,7 @@ export function usePublicBalance(): {
       balances.push({
         token: TOKENS.SOL,
         amount: solBalance / LAMPORTS_PER_SOL,
-        usdValue: 0, // Would need price feed
+        usdValue: 0,
       });
 
       // Fetch SPL token balances
@@ -59,12 +65,13 @@ export function usePublicBalance(): {
       }
 
       setPublicBalances(balances);
+      hasFetchedOnce.current = true;
     } catch (error) {
       console.error("Error fetching public balances:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [connected, publicKey, connection, setPublicBalances]);
+  }, [connected, publicKey, connection, setPublicBalances, publicBalances.length]);
 
   // Auto-fetch on connection
   useEffect(() => {

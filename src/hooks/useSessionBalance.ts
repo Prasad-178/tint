@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useShieldedBalance } from "./useShieldedBalance";
 import type { TokenInfo } from "@/lib/solana/constants";
 
@@ -10,12 +10,24 @@ interface SessionBalance {
   usdValue: number;
 }
 
+// Compare session balances to avoid unnecessary re-renders
+function sessionBalancesChanged(prev: SessionBalance[], next: SessionBalance[]): boolean {
+  if (prev.length !== next.length) return true;
+  for (let i = 0; i < prev.length; i++) {
+    const prevItem = prev[i];
+    const nextItem = next.find((n) => n.token.mint === prevItem.token.mint);
+    if (!nextItem || prevItem.amount !== nextItem.amount) return true;
+  }
+  return false;
+}
+
 export function useSessionBalance() {
   const { isInitialized, getSessionPublicKey } = useShieldedBalance();
   const [sessionPublicKey, setSessionPublicKey] = useState<string | null>(null);
   const [balances, setBalances] = useState<SessionBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionVersion, setSessionVersion] = useState(0); // Used to force refresh
+  const [sessionVersion, setSessionVersion] = useState(0);
+  const hasFetchedOnce = useRef(false);
 
   // Get session public key when initialized or when session version changes
   useEffect(() => {
@@ -24,17 +36,21 @@ export function useSessionBalance() {
         .then((key) => {
           if (key !== sessionPublicKey) {
             setSessionPublicKey(key);
-            console.log("Session public key updated:", key);
           }
         })
         .catch(console.error);
     }
-  }, [isInitialized, sessionVersion, getSessionPublicKey]); // Note: removed sessionPublicKey from deps
+  }, [isInitialized, sessionVersion, getSessionPublicKey]);
 
   const fetchBalances = useCallback(async () => {
     if (!sessionPublicKey) return;
 
-    setIsLoading(true);
+    // Only show loading on first fetch
+    const isFirstFetch = balances.length === 0 && !hasFetchedOnce.current;
+    if (isFirstFetch) {
+      setIsLoading(true);
+    }
+
     try {
       const response = await fetch("/api/session/balances", {
         method: "POST",
@@ -44,14 +60,19 @@ export function useSessionBalance() {
 
       if (response.ok) {
         const data = await response.json();
-        setBalances(data.balances || []);
+        const newBalances = data.balances || [];
+        // Only update state if balances changed
+        if (sessionBalancesChanged(balances, newBalances)) {
+          setBalances(newBalances);
+        }
+        hasFetchedOnce.current = true;
       }
     } catch (error) {
       console.error("Error fetching session balances:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [sessionPublicKey]);
+  }, [sessionPublicKey, balances]);
 
   // Auto-fetch on mount and when session key changes
   useEffect(() => {

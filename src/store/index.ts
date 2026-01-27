@@ -2,6 +2,20 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Transaction, ProofOfFunds, PublicBalance, ShieldedBalance } from "@/types";
 
+// Helper to compare balance arrays - only update if values changed
+function balancesChanged<T extends { token: { mint: string }; amount: number }>(
+  prev: T[],
+  next: T[]
+): boolean {
+  if (prev.length !== next.length) return true;
+  for (let i = 0; i < prev.length; i++) {
+    const prevItem = prev[i];
+    const nextItem = next.find((n) => n.token.mint === prevItem.token.mint);
+    if (!nextItem || prevItem.amount !== nextItem.amount) return true;
+  }
+  return false;
+}
+
 interface AppState {
   // Wallet
   walletAddress: string | null;
@@ -42,13 +56,24 @@ const initialState: Pick<AppState, 'walletAddress' | 'publicBalances' | 'shielde
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
 
       setWallet: (address) => set({ walletAddress: address }),
 
-      setPublicBalances: (balances) => set({ publicBalances: balances }),
-      setShieldedBalances: (balances) => set({ shieldedBalances: balances }),
+      // Only update if balances actually changed
+      setPublicBalances: (balances) => {
+        const current = get().publicBalances;
+        if (balancesChanged(current, balances)) {
+          set({ publicBalances: balances });
+        }
+      },
+      setShieldedBalances: (balances) => {
+        const current = get().shieldedBalances;
+        if (balancesChanged(current, balances)) {
+          set({ shieldedBalances: balances });
+        }
+      },
 
       addTransaction: (tx) =>
         set((state) => ({
