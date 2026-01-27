@@ -200,19 +200,30 @@ export function ProofOfFunds() {
                 </p>
               </div>
 
-              <div className="flex gap-2">
-                <code className="flex-1 text-[10px] bg-muted px-2 py-1.5 rounded font-mono truncate">
-                  {generatedProof.shareableLink}
-                </code>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => copyLink(generatedProof.shareableLink)}
-                >
-                  {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-                </Button>
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Shareable link:</p>
+                <div className="flex gap-2">
+                  <code className="flex-1 text-[10px] bg-muted px-2 py-2 rounded font-mono break-all leading-relaxed">
+                    {generatedProof.shareableLink}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => copyLink(generatedProof.shareableLink)}
+                  >
+                    {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
               </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowProofDialog(false)}
+              >
+                Done
+              </Button>
             </div>
           )}
         </DialogContent>
