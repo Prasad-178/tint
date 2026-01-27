@@ -15,15 +15,21 @@ export function useSessionBalance() {
   const [sessionPublicKey, setSessionPublicKey] = useState<string | null>(null);
   const [balances, setBalances] = useState<SessionBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionVersion, setSessionVersion] = useState(0); // Used to force refresh
 
-  // Get session public key when initialized
+  // Get session public key when initialized or when session version changes
   useEffect(() => {
-    if (isInitialized && !sessionPublicKey) {
+    if (isInitialized) {
       getSessionPublicKey()
-        .then(setSessionPublicKey)
+        .then((key) => {
+          if (key !== sessionPublicKey) {
+            setSessionPublicKey(key);
+            console.log("Session public key updated:", key);
+          }
+        })
         .catch(console.error);
     }
-  }, [isInitialized, sessionPublicKey, getSessionPublicKey]);
+  }, [isInitialized, sessionVersion, getSessionPublicKey]); // Note: removed sessionPublicKey from deps
 
   const fetchBalances = useCallback(async () => {
     if (!sessionPublicKey) return;
@@ -61,10 +67,18 @@ export function useSessionBalance() {
     return () => clearInterval(interval);
   }, [sessionPublicKey, fetchBalances]);
 
+  // Function to refresh the session (e.g., after importing a new session)
+  const refreshSession = useCallback(() => {
+    setSessionPublicKey(null);
+    setBalances([]);
+    setSessionVersion((v) => v + 1);
+  }, []);
+
   return {
     sessionPublicKey,
     balances,
     isLoading,
     fetchBalances,
+    refreshSession,
   };
 }

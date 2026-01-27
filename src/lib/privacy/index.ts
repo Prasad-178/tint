@@ -15,8 +15,9 @@ export const PRIVACY_CASH_SIGN_MESSAGE = "Privacy Money account sign in";
 // Session keypair derivation message
 export const SESSION_KEYPAIR_MESSAGE = "Tint Session Key Derivation";
 
-// LocalStorage key prefix for session signatures
-const SESSION_STORAGE_KEY_PREFIX = "tint_session_";
+// LocalStorage key prefixes
+const SESSION_KEYPAIR_KEY_PREFIX = "tint_session_keypair_"; // Stores full keypair (64 bytes)
+const SESSION_SIGNATURE_KEY_PREFIX = "tint_session_"; // Legacy: stores signature
 
 /**
  * Derives a deterministic session keypair from a wallet signature
@@ -29,14 +30,30 @@ export function deriveSessionKeypair(signature: Uint8Array): Keypair {
 }
 
 /**
- * Get cached session signature from localStorage
+ * Get cached session keypair from localStorage
+ * First tries to get the full keypair, then falls back to deriving from signature
  */
-function getCachedSessionSignature(walletAddress: string): Uint8Array | null {
+function getCachedSessionKeypair(walletAddress: string): Keypair | null {
   if (typeof window === "undefined") return null;
+  
   try {
-    const cached = localStorage.getItem(`${SESSION_STORAGE_KEY_PREFIX}${walletAddress}`);
-    if (cached) {
-      return new Uint8Array(Buffer.from(cached, "base64"));
+    // First, try to get the full keypair (preferred)
+    const keypairData = localStorage.getItem(`${SESSION_KEYPAIR_KEY_PREFIX}${walletAddress}`);
+    if (keypairData) {
+      const secretKey = new Uint8Array(Buffer.from(keypairData, "base64"));
+      if (secretKey.length === 64) {
+        return Keypair.fromSecretKey(secretKey);
+      }
+    }
+
+    // Fall back to legacy: derive from signature
+    const signatureData = localStorage.getItem(`${SESSION_SIGNATURE_KEY_PREFIX}${walletAddress}`);
+    if (signatureData) {
+      const signature = new Uint8Array(Buffer.from(signatureData, "base64"));
+      const keypair = deriveSessionKeypair(signature);
+      // Migrate to new format
+      cacheSessionKeypair(walletAddress, keypair);
+      return keypair;
     }
   } catch (e) {
     console.warn("Failed to read session from localStorage:", e);
@@ -45,14 +62,14 @@ function getCachedSessionSignature(walletAddress: string): Uint8Array | null {
 }
 
 /**
- * Cache session signature in localStorage
+ * Cache session keypair in localStorage (stores the full 64-byte secret key)
  */
-function cacheSessionSignature(walletAddress: string, signature: Uint8Array): void {
+function cacheSessionKeypair(walletAddress: string, keypair: Keypair): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(
-      `${SESSION_STORAGE_KEY_PREFIX}${walletAddress}`,
-      Buffer.from(signature).toString("base64")
+      `${SESSION_KEYPAIR_KEY_PREFIX}${walletAddress}`,
+      Buffer.from(keypair.secretKey).toString("base64")
     );
   } catch (e) {
     console.warn("Failed to cache session in localStorage:", e);
@@ -60,14 +77,89 @@ function cacheSessionSignature(walletAddress: string, signature: Uint8Array): vo
 }
 
 /**
- * Clear cached session signature from localStorage
+ * Clear cached session data from localStorage
  */
-function clearCachedSessionSignature(walletAddress: string): void {
+function clearCachedSession(walletAddress: string): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.removeItem(`${SESSION_STORAGE_KEY_PREFIX}${walletAddress}`);
+    localStorage.removeItem(`${SESSION_KEYPAIR_KEY_PREFIX}${walletAddress}`);
+    localStorage.removeItem(`${SESSION_SIGNATURE_KEY_PREFIX}${walletAddress}`); // Also clear legacy
   } catch (e) {
     console.warn("Failed to clear session from localStorage:", e);
+  }
+}
+
+/**
+ * Import a session keypair from base64 string
+ */
+export function importSessionKeypair(walletAddress: string, keypairBase64: string): Keypair | null {
+  try {
+    const secretKey = new Uint8Array(Buffer.from(keypairBase64, "base64"));
+    if (secretKey.length !== 64) {
+      console.error("Invalid keypair: expected 64 bytes");
+      return null;
+    }
+    const keypair = Keypair.fromSecretKey(secretKey);
+    cacheSessionKeypair(walletAddress, keypair);
+    return keypair;
+  } catch (e) {
+    console.error("Failed to import session keypair:", e);
+    return null;
+  }
+}
+
+/**
+ * Export the current session keypair as base64
+ */
+export function exportCurrentSessionKeypair(walletAddress: string): string | null {
+  const keypair = getCachedSessionKeypair(walletAddress);
+  if (!keypair) return null;
+  return Buffer.from(keypair.secretKey).toString("base64");
+}
+
+/**
+ * Fetch session keypair from database (if Supabase is configured)
+ */
+async function fetchSessionFromDatabase(walletAddress: string): Promise<Keypair | null> {
+  try {
+    const response = await fetch('/api/session', {
+      method: 'GET',
+      headers: {
+        'x-wallet-address': walletAddress,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.sessionKeypair) {
+        const secretKey = new Uint8Array(Buffer.from(data.sessionKeypair, "base64"));
+        if (secretKey.length === 64) {
+          return Keypair.fromSecretKey(secretKey);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to fetch session from database:', error);
+  }
+  return null;
+}
+
+/**
+ * Save session keypair to database (if Supabase is configured)
+ */
+async function saveSessionToDatabase(walletAddress: string, keypair: Keypair): Promise<void> {
+  try {
+    const sessionKeypairBase64 = Buffer.from(keypair.secretKey).toString("base64");
+    await fetch('/api/session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-wallet-address': walletAddress,
+      },
+      body: JSON.stringify({ sessionKeypairBase64 }),
+    });
+  } catch (error) {
+    console.warn('Failed to save session to database:', error);
   }
 }
 
@@ -96,6 +188,15 @@ class ClientPrivacyClient {
 
   initialize(config: ClientPrivacyConfig) {
     this.config = config;
+    // Try to restore session keypair from localStorage immediately
+    if (config) {
+      const walletAddress = config.wallet.publicKey.toBase58();
+      const cachedKeypair = getCachedSessionKeypair(walletAddress);
+      if (cachedKeypair) {
+        this.sessionKeypair = cachedKeypair;
+        console.log("Restored session keypair from localStorage:", cachedKeypair.publicKey.toBase58());
+      }
+    }
   }
 
   isInitialized(): boolean {
@@ -104,6 +205,16 @@ class ClientPrivacyClient {
 
   getConfig(): ClientPrivacyConfig | null {
     return this.config;
+  }
+
+  /**
+   * Check if we have a cached session keypair (without prompting for signature)
+   */
+  hasCachedSession(): boolean {
+    if (!this.config) return false;
+    if (this.sessionKeypair) return true;
+    const walletAddress = this.config.wallet.publicKey.toBase58();
+    return getCachedSessionKeypair(walletAddress) !== null;
   }
 
   /**
@@ -126,7 +237,7 @@ class ClientPrivacyClient {
 
   /**
    * Get or create a session keypair for privacy operations
-   * Priority: 1. In-memory cache, 2. localStorage, 3. New signature
+   * Priority: 1. In-memory cache, 2. Database (cross-device), 3. localStorage, 4. New signature
    */
   async getSessionKeypair(): Promise<Keypair> {
     if (!this.config) {
@@ -147,21 +258,40 @@ class ClientPrivacyClient {
 
     // Start the request and store the promise
     this.sessionKeypairPromise = (async () => {
-      // Try to restore from localStorage
-      const cachedSignature = getCachedSessionSignature(walletAddress);
-      if (cachedSignature) {
-        this.sessionKeypair = deriveSessionKeypair(cachedSignature);
+      // 1. Try to restore from localStorage first (fastest)
+      const cachedKeypair = getCachedSessionKeypair(walletAddress);
+      if (cachedKeypair) {
+        this.sessionKeypair = cachedKeypair;
+        console.log("Using cached session keypair from localStorage:", cachedKeypair.publicKey.toBase58());
+        // Sync to database in background (for cross-device access)
+        saveSessionToDatabase(walletAddress, cachedKeypair).catch(() => {});
         return this.sessionKeypair;
       }
 
-      // No existing session - create new one from signature
+      // 2. Try to fetch from database (for cross-device persistence)
+      console.log("Checking database for session...");
+      const dbKeypair = await fetchSessionFromDatabase(walletAddress);
+      if (dbKeypair) {
+        this.sessionKeypair = dbKeypair;
+        // Cache in localStorage for faster subsequent loads
+        cacheSessionKeypair(walletAddress, dbKeypair);
+        console.log("Restored session keypair from database:", dbKeypair.publicKey.toBase58());
+        return this.sessionKeypair;
+      }
+
+      // 3. No existing session - create new one from signature
+      console.log("No cached session found, requesting signature...");
       const message = new TextEncoder().encode(SESSION_KEYPAIR_MESSAGE);
       const signature = await this.config!.wallet.signMessage(message);
 
       this.sessionKeypair = deriveSessionKeypair(signature);
+      console.log("Created new session keypair:", this.sessionKeypair.publicKey.toBase58());
 
-      // Cache in localStorage
-      cacheSessionSignature(walletAddress, signature);
+      // Cache the full keypair in localStorage
+      cacheSessionKeypair(walletAddress, this.sessionKeypair);
+      
+      // Also save to database for cross-device access
+      saveSessionToDatabase(walletAddress, this.sessionKeypair).catch(() => {});
 
       return this.sessionKeypair;
     })();
@@ -171,6 +301,24 @@ class ClientPrivacyClient {
     } finally {
       this.sessionKeypairPromise = null;
     }
+  }
+
+  /**
+   * Import a session keypair from base64 (for recovery)
+   */
+  importSession(keypairBase64: string): boolean {
+    if (!this.config) {
+      console.error("Client not initialized");
+      return false;
+    }
+    const walletAddress = this.config.wallet.publicKey.toBase58();
+    const keypair = importSessionKeypair(walletAddress, keypairBase64);
+    if (keypair) {
+      this.sessionKeypair = keypair;
+      console.log("Imported session keypair:", keypair.publicKey.toBase58());
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -298,6 +446,7 @@ class ClientPrivacyClient {
 
   /**
    * Reset the client state (call when wallet disconnects)
+   * Note: This does NOT clear localStorage - the session persists for next login
    */
   reset() {
     this.config = null;
@@ -308,10 +457,18 @@ class ClientPrivacyClient {
 
   /**
    * Fully logout - clears localStorage cache too
+   * Only use this when user explicitly wants to remove all session data
    */
   fullLogout(walletAddress: string) {
     this.reset();
-    clearCachedSessionSignature(walletAddress);
+    clearCachedSession(walletAddress);
+  }
+
+  /**
+   * Get the wallet address associated with this client
+   */
+  getWalletAddress(): string | null {
+    return this.config?.wallet.publicKey.toBase58() || null;
   }
 }
 
@@ -325,3 +482,5 @@ export function initializePrivacyClient(config: ClientPrivacyConfig) {
 export function resetPrivacyClient() {
   privacyClient.reset();
 }
+
+// Note: importSessionKeypair and exportCurrentSessionKeypair are already exported above

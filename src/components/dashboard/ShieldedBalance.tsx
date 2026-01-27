@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useShieldedBalance } from "@/hooks/useShieldedBalance";
 import { useSessionBalance } from "@/hooks/useSessionBalance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,9 +17,11 @@ import {
   Wallet,
   ExternalLink,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { formatUSD, shortenAddress } from "@/lib/utils";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { SessionManager } from "./SessionManager";
 
 interface ShieldedBalanceProps {
   onWithdrawClick: (tokenMint: string, amount: number) => void;
@@ -39,6 +41,7 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
     balances: sessionBalances,
     isLoading: isLoadingSession,
     fetchBalances: fetchSessionBalances,
+    refreshSession,
   } = useSessionBalance();
   const [copied, setCopied] = useState(false);
 
@@ -56,10 +59,16 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
     }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     fetchShieldedBalances(true);
     fetchSessionBalances();
-  };
+  }, [fetchShieldedBalances, fetchSessionBalances]);
+
+  const handleSessionChanged = useCallback(() => {
+    // Refresh everything when session changes (e.g., after import)
+    refreshSession();
+    fetchShieldedBalances(true);
+  }, [refreshSession, fetchShieldedBalances]);
 
   if (!connected) {
     return (
@@ -83,6 +92,7 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
   const sessionSolBalance = sessionBalances.find(b => b.token.symbol === "SOL")?.amount || 0;
   const hasSessionTokens = sessionBalances.some(b => b.amount > 0 && b.token.symbol !== "SOL");
   const hasSolForFees = sessionSolBalance >= 0.005;
+  const totalSessionValue = sessionBalances.reduce((acc, b) => acc + (b.amount > 0 ? b.amount : 0), 0);
 
   return (
     <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
@@ -180,10 +190,16 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
         {/* Session Wallet Section */}
         {sessionPublicKey && (
           <div className="mt-6 pt-4 border-t border-border">
-            <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-3">
-              <Wallet className="h-3 w-3" />
-              Session Wallet (Ready to Shield)
-            </h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Wallet className="h-3 w-3" />
+                Session Wallet (Ready to Shield)
+              </h4>
+              <SessionManager 
+                sessionPublicKey={sessionPublicKey} 
+                onSessionChanged={handleSessionChanged}
+              />
+            </div>
 
             {/* Session Wallet Address */}
             <div className="p-3 rounded-lg border border-dashed border-border bg-muted/30 mb-3">
