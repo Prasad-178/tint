@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // Optimize package imports
     optimizePackageImports: ["lucide-react", "recharts", "date-fns"],
+    // Mark privacycash as external to prevent bundling issues with Node.js modules
+    serverComponentsExternalPackages: ["privacycash", "node-localstorage"],
   },
 
   // Image optimization
@@ -37,6 +39,16 @@ const nextConfig: NextConfig = {
         crypto: false,
       };
     }
+    
+    // Externalize privacycash for server-side to use actual Node.js modules
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        "privacycash": "commonjs privacycash",
+        "node-localstorage": "commonjs node-localstorage",
+      });
+    }
+    
     return config;
   },
 };

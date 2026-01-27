@@ -7,6 +7,8 @@
 
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { USDC_MINT, SOL_MINT, USDT_MINT } from "@/lib/solana/constants";
+import * as path from "path";
+import * as fs from "fs";
 
 interface DepositResult {
   tx: string;
@@ -20,6 +22,22 @@ interface WithdrawResult {
   base_units?: number;
   fee_in_lamports?: number;
   fee_base_units?: number;
+}
+
+/**
+ * Ensure the cache directory exists for Privacy Cash SDK
+ * The SDK uses path.join(process.cwd(), "cache") internally
+ */
+function ensureCacheDirectory(): void {
+  try {
+    const cacheDir = path.join(process.cwd(), "cache");
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+      console.log("Created Privacy Cash cache directory:", cacheDir);
+    }
+  } catch (error) {
+    console.warn("Failed to create cache directory:", error);
+  }
 }
 
 /**
@@ -43,6 +61,9 @@ export class PrivacyCashServer {
    */
   async initialize(): Promise<void> {
     try {
+      // Ensure cache directory exists before initializing SDK
+      ensureCacheDirectory();
+      
       const { PrivacyCash } = await import("privacycash");
 
       this.client = new PrivacyCash({
