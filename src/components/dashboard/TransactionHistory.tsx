@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useAppStore } from "@/store";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowDown, ArrowUp, ExternalLink, History } from "lucide-react";
@@ -15,72 +14,61 @@ export function TransactionHistory() {
     return null;
   }
 
+  const recentTxs = transactions.slice(0, 5);
+
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <History className="h-5 w-5" />
-          Recent Activity
-        </CardTitle>
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <History className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">Recent Activity</CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
-        {transactions.length === 0 ? (
-          <div className="text-center py-8">
-            <History className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No transactions yet</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Your shield and withdraw history will appear here
-            </p>
-          </div>
+        {recentTxs.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">
+            No activity yet
+          </p>
         ) : (
-          <div className="space-y-3">
-            {transactions.slice(0, 10).map((tx) => (
+          <div className="space-y-1">
+            {recentTxs.map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between py-3 border-b border-border last:border-0"
+                className="flex items-center justify-between py-2"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <div
-                    className={`p-2 rounded-lg ${
+                    className={`p-1.5 rounded ${
                       tx.type === "deposit"
-                        ? "bg-emerald-500/10 text-emerald-500"
-                        : "bg-blue-500/10 text-blue-500"
+                        ? "text-emerald-500"
+                        : "text-blue-500"
                     }`}
                   >
                     {tx.type === "deposit" ? (
-                      <ArrowDown className="h-4 w-4" />
+                      <ArrowDown className="h-3.5 w-3.5" />
                     ) : (
-                      <ArrowUp className="h-4 w-4" />
+                      <ArrowUp className="h-3.5 w-3.5" />
                     )}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">
-                        {tx.type === "deposit" ? "Shielded" : "Withdrew"}
-                      </p>
-                      <Badge
-                        variant={tx.status === "success" ? "success" : "destructive"}
-                        className="text-xs"
-                      >
-                        {tx.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {tx.amount.toLocaleString()} {tx.token.symbol}
+                    <p className="text-sm">
+                      {tx.type === "deposit" ? "Shielded" : "Withdrew"}{" "}
+                      <span className="font-mono">{tx.amount.toLocaleString("en-US", { maximumFractionDigits: 4 })}</span>{" "}
+                      <span className="text-muted-foreground">{tx.token.symbol}</span>
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <p className="text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">
                     {formatDistanceToNow(tx.timestamp, { addSuffix: true })}
-                  </p>
+                  </span>
                   <a
                     href={`https://solscan.io/tx/${tx.txSignature}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </div>
               </div>

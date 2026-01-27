@@ -5,19 +5,16 @@ import { useShieldedBalance } from "@/hooks/useShieldedBalance";
 import { useSessionBalance } from "@/hooks/useSessionBalance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   RefreshCw,
-  Shield,
+  EyeOff,
   ArrowUp,
   ArrowDown,
   Copy,
   Check,
-  Lock,
   Wallet,
   ExternalLink,
   Loader2,
-  AlertCircle,
 } from "lucide-react";
 import { formatUSD, shortenAddress } from "@/lib/utils";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -65,18 +62,17 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
   }, [fetchShieldedBalances, fetchSessionBalances]);
 
   const handleSessionChanged = useCallback(() => {
-    // Refresh everything when session changes (e.g., after import)
     refreshSession();
     fetchShieldedBalances(true);
   }, [refreshSession, fetchShieldedBalances]);
 
   if (!connected) {
     return (
-      <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
+      <Card className="border-emerald-500/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="h-5 w-5 text-emerald-500" />
-            Shielded Balance
+            <EyeOff className="h-5 w-5 text-emerald-500" />
+            Private Balance
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -92,199 +88,158 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
   const sessionSolBalance = sessionBalances.find(b => b.token.symbol === "SOL")?.amount || 0;
   const hasSessionTokens = sessionBalances.some(b => b.amount > 0 && b.token.symbol !== "SOL");
   const hasSolForFees = sessionSolBalance >= 0.005;
-  const totalSessionValue = sessionBalances.reduce((acc, b) => acc + (b.amount > 0 ? b.amount : 0), 0);
+  const hasShieldedAssets = shieldedBalances.some(b => b.amount > 0);
 
   return (
-    <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
-      <CardHeader className="pb-3">
+    <Card className="border-emerald-500/20">
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="h-5 w-5 text-emerald-500" />
-            Shielded Balance
-            <Badge variant="success" className="ml-2">
-              <Lock className="h-3 w-3 mr-1" />
-              Private
-            </Badge>
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <EyeOff className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Private Assets</CardTitle>
+          </div>
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             onClick={handleRefresh}
             disabled={isLoadingShielded || isLoadingSession}
           >
-            <RefreshCw className={`h-4 w-4 ${(isLoadingShielded || isLoadingSession) ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${(isLoadingShielded || isLoadingSession) ? "animate-spin" : ""}`} />
           </Button>
         </div>
+        <p className="text-2xl font-semibold text-emerald-500">{formatUSD(totalShieldedUsd)}</p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Total Value */}
-        <div className="text-center py-4">
-          <p className="text-3xl font-bold text-emerald-500">
-            {formatUSD(totalShieldedUsd)}
-          </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Only you can see this balance
-          </p>
-        </div>
-
+      <CardContent className="pt-4 space-y-4">
         {/* Shielded Token Balances */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Lock className="h-3 w-3" />
-            Shielded Assets
-          </h4>
-          {shieldedBalances.length === 0 || shieldedBalances.every(b => b.amount === 0) ? (
-            <div className="text-center py-4">
-              <Shield className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No shielded assets yet</p>
-            </div>
-          ) : (
-            shieldedBalances.filter(b => b.amount > 0).map((balance) => (
+        {!hasShieldedAssets ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No private assets yet
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {shieldedBalances.filter(b => b.amount > 0).map((balance) => (
               <div
                 key={balance.token.mint}
-                className="flex items-center justify-between group p-2 rounded-lg hover:bg-muted/30"
+                className="flex items-center justify-between py-2 group"
               >
                 <div className="flex items-center gap-3">
                   {balance.token.logoURI ? (
                     <img
                       src={balance.token.logoURI}
                       alt={balance.token.symbol}
-                      className="h-8 w-8 rounded-full"
+                      className="h-7 w-7 rounded-full"
                     />
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                    <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
                       {balance.token.symbol.slice(0, 2)}
                     </div>
                   )}
-                  <div>
-                    <p className="font-medium">{balance.token.symbol}</p>
-                    <p className="text-xs text-muted-foreground">{balance.token.name}</p>
-                  </div>
+                  <span className="font-medium text-sm">{balance.token.symbol}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="font-mono">
-                      {balance.amount.toLocaleString("en-US", { maximumFractionDigits: 6 })}
-                    </p>
-                    {balance.usdValue !== undefined && balance.usdValue > 0 && (
-                      <p className="text-xs text-muted-foreground">{formatUSD(balance.usdValue)}</p>
-                    )}
-                  </div>
-                  {balance.amount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => onWithdrawClick(balance.token.mint, balance.amount)}
-                    >
-                      <ArrowUp className="h-4 w-4 mr-1" />
-                      Withdraw
-                    </Button>
-                  )}
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-mono">
+                    {balance.amount.toLocaleString("en-US", { maximumFractionDigits: 4 })}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                    onClick={() => onWithdrawClick(balance.token.mint, balance.amount)}
+                  >
+                    <ArrowUp className="h-3 w-3 mr-1" />
+                    Withdraw
+                  </Button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Session Wallet Section */}
         {sessionPublicKey && (
-          <div className="mt-6 pt-4 border-t border-border">
+          <div className="pt-4 border-t border-border">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Wallet className="h-3 w-3" />
-                Session Wallet (Ready to Shield)
-              </h4>
-              <SessionManager 
-                sessionPublicKey={sessionPublicKey} 
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Wallet className="h-3.5 w-3.5" />
+                <span>Deposit Address</span>
+              </div>
+              <SessionManager
+                sessionPublicKey={sessionPublicKey}
                 onSessionChanged={handleSessionChanged}
               />
             </div>
 
-            {/* Session Wallet Address */}
-            <div className="p-3 rounded-lg border border-dashed border-border bg-muted/30 mb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Session Address</p>
-                  <code className="text-xs font-mono">{shortenAddress(sessionPublicKey, 8)}</code>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={copyAddress} className="h-8 w-8">
-                    {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+            {/* Session Wallet Address - Compact */}
+            <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30 mb-3">
+              <code className="text-xs font-mono text-muted-foreground">{shortenAddress(sessionPublicKey, 6)}</code>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={copyAddress} className="h-7 w-7">
+                  {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                </Button>
+                <a
+                  href={`https://solscan.io/account/${sessionPublicKey}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <ExternalLink className="h-3 w-3" />
                   </Button>
-                  <a
-                    href={`https://solscan.io/account/${sessionPublicKey}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
-                  </a>
-                </div>
+                </a>
               </div>
             </div>
 
-            {/* Session Wallet Balances */}
+            {/* Session Wallet Balances - Only show if there are tokens */}
             {isLoadingSession ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                <span className="text-sm text-muted-foreground">Loading session wallet...</span>
+              <div className="flex items-center justify-center py-3">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
-            ) : (
-              <div className="space-y-2">
-                {sessionBalances.map((balance) => (
+            ) : sessionBalances.some(b => b.amount > 0) ? (
+              <div className="space-y-1">
+                {sessionBalances.filter(b => b.amount > 0).map((balance) => (
                   <div
                     key={balance.token.mint}
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/20 group"
+                    className="flex items-center justify-between py-1.5 group"
                   >
                     <div className="flex items-center gap-2">
                       {balance.token.logoURI ? (
-                        <img src={balance.token.logoURI} alt="" className="h-6 w-6 rounded-full" />
+                        <img src={balance.token.logoURI} alt="" className="h-5 w-5 rounded-full" />
                       ) : (
-                        <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-xs">
+                        <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px]">
                           {balance.token.symbol.slice(0, 2)}
                         </div>
                       )}
-                      <span className="text-sm">{balance.token.symbol}</span>
+                      <span className="text-xs text-muted-foreground">{balance.token.symbol}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-mono">
-                        {balance.amount.toLocaleString("en-US", { maximumFractionDigits: 6 })}
+                      <span className="text-xs font-mono">
+                        {balance.amount.toLocaleString("en-US", { maximumFractionDigits: 4 })}
                       </span>
-                      {balance.amount > 0 && balance.token.symbol !== "SOL" && (
+                      {balance.token.symbol !== "SOL" && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 text-xs opacity-0 group-hover:opacity-100"
+                          className="h-6 px-2 text-[10px] opacity-0 group-hover:opacity-100"
                           onClick={() => onShieldFromSessionClick(balance.token.mint, balance.amount)}
                           disabled={!hasSolForFees}
                         >
-                          <ArrowDown className="h-3 w-3 mr-1" />
+                          <ArrowDown className="h-2.5 w-2.5 mr-0.5" />
                           Shield
                         </Button>
                       )}
                     </div>
                   </div>
                 ))}
-
-                {/* Fee warning */}
                 {!hasSolForFees && hasSessionTokens && (
-                  <p className="text-xs text-amber-500 mt-2">
-                    Add at least 0.005 SOL to session wallet for transaction fees
+                  <p className="text-[10px] text-amber-500 mt-1">
+                    Need 0.005 SOL for fees
                   </p>
                 )}
-
-                {/* Instructions */}
-                <div className="text-xs text-muted-foreground mt-3 p-2 rounded bg-muted/20">
-                  <p className="font-medium mb-1">How to shield tokens:</p>
-                  <ol className="list-decimal list-inside space-y-1">
-                    <li>Send tokens + SOL (for fees) to session address above</li>
-                    <li>Click Shield next to the token</li>
-                    <li>Tokens move to shielded pool (private)</li>
-                  </ol>
-                </div>
               </div>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-2">
+                Send tokens here to shield them
+              </p>
             )}
           </div>
         )}

@@ -1,29 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAppStore } from "@/store";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { FileCheck, Copy, Check, QrCode, Trash2, Shield, Loader2 } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { FileCheck, Copy, Check, QrCode, Trash2, Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { formatUSD, generateUUID } from "@/lib/utils";
 import { QRCodeSVG } from "qrcode.react";
 
 const THRESHOLD_OPTIONS = [
   { label: "$1K", value: 1000 },
   { label: "$10K", value: 10000 },
-  { label: "$50K", value: 50000 },
   { label: "$100K", value: 100000 },
-  { label: "$500K", value: 500000 },
   { label: "$1M", value: 1000000 },
 ];
 
@@ -41,9 +38,7 @@ export function ProofOfFunds() {
   const generateProof = async (threshold: number) => {
     if (!publicKey) return;
 
-    // Check if user has enough shielded balance
     if (totalShieldedValue < threshold) {
-      alert(`Insufficient shielded balance. You have ${formatUSD(totalShieldedValue)} but need at least ${formatUSD(threshold)}`);
       return;
     }
 
@@ -51,15 +46,14 @@ export function ProofOfFunds() {
     setSelectedThreshold(threshold);
 
     try {
-      // Simulate proof generation (in production, this would use ZK proofs)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const proofId = generateUUID();
       const proof = {
         id: proofId,
         threshold,
         createdAt: Date.now(),
-        expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
         proofData: Buffer.from(JSON.stringify({
           threshold,
           timestamp: Date.now(),
@@ -89,173 +83,135 @@ export function ProofOfFunds() {
     return null;
   }
 
+  const activeProofs = proofs.filter(p => p.expiresAt > Date.now());
+
   return (
     <>
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <FileCheck className="h-5 w-5" />
-            Proof of Funds
-          </CardTitle>
-          <CardDescription>
-            Generate verifiable proof that you hold funds without revealing your exact balance or address
-          </CardDescription>
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <FileCheck className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Proof of Funds</CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Generate New Proof */}
-          <div className="space-y-3">
-            <p className="text-sm font-medium">Generate New Proof</p>
-            <div className="flex flex-wrap gap-2">
-              {THRESHOLD_OPTIONS.map((option) => (
+          {/* Generate buttons */}
+          <div className="flex flex-wrap gap-2">
+            {THRESHOLD_OPTIONS.map((option) => {
+              const canGenerate = totalShieldedValue >= option.value;
+              return (
                 <Button
                   key={option.value}
-                  variant={totalShieldedValue >= option.value ? "outline" : "ghost"}
+                  variant={canGenerate ? "outline" : "ghost"}
                   size="sm"
                   onClick={() => generateProof(option.value)}
-                  disabled={isGenerating || totalShieldedValue < option.value}
-                  className={totalShieldedValue < option.value ? "opacity-50" : ""}
+                  disabled={isGenerating || !canGenerate}
+                  className={`h-8 text-xs ${!canGenerate ? "opacity-40" : ""}`}
                 >
                   {isGenerating && selectedThreshold === option.value ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
                   ) : null}
                   {option.label}+
                 </Button>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Your shielded balance: {formatUSD(totalShieldedValue)}
-            </p>
+              );
+            })}
           </div>
 
-          {/* Active Proofs */}
-          {proofs.length > 0 && (
-            <div className="space-y-3 pt-4 border-t border-border">
-              <p className="text-sm font-medium">Active Proofs</p>
-              <div className="space-y-2">
-                {proofs.map((proof) => {
-                  const isExpired = proof.expiresAt < Date.now();
-                  return (
-                    <div
-                      key={proof.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${
-                        isExpired ? "border-red-500/20 bg-red-500/5" : "border-border bg-muted/30"
-                      }`}
+          {/* Active Proofs - Compact list */}
+          {activeProofs.length > 0 && (
+            <div className="space-y-2 pt-3 border-t border-border">
+              {activeProofs.map((proof) => (
+                <div
+                  key={proof.id}
+                  className="flex items-center justify-between py-1.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs font-normal">
+                      {formatUSD(proof.threshold)}+
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(proof.expiresAt, { addSuffix: true })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => {
+                        setGeneratedProof(proof);
+                        setShowProofDialog(true);
+                      }}
                     >
-                      <div className="flex items-center gap-3">
-                        <Shield className={`h-5 w-5 ${isExpired ? "text-red-500" : "text-emerald-500"}`} />
-                        <div>
-                          <p className="font-medium">
-                            Holds {formatUSD(proof.threshold)}+
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {isExpired
-                              ? "Expired"
-                              : `Expires ${formatDistanceToNow(proof.expiresAt, { addSuffix: true })}`}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {!isExpired && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setGeneratedProof(proof);
-                                setShowProofDialog(true);
-                              }}
-                            >
-                              <QrCode className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => copyLink(proof.shareableLink)}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeProof(proof.id)}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      <QrCode className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => copyLink(proof.shareableLink)}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-red-500"
+                      onClick={() => removeProof(proof.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
+          )}
+
+          {activeProofs.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              Generate proofs to share privately
+            </p>
           )}
         </CardContent>
       </Card>
 
-      {/* Proof Dialog */}
+      {/* Proof Dialog - Simplified */}
       <Dialog open={showProofDialog} onOpenChange={setShowProofDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileCheck className="h-5 w-5 text-emerald-500" />
-              Proof of Funds Generated
-            </DialogTitle>
-            <DialogDescription>
-              Share this proof to verify you hold {generatedProof && formatUSD(generatedProof.threshold)}+ without revealing your actual balance
-            </DialogDescription>
+            <DialogTitle className="text-base">Proof Generated</DialogTitle>
           </DialogHeader>
 
           {generatedProof && (
-            <div className="space-y-6 py-4">
-              {/* QR Code */}
+            <div className="space-y-4 pt-2">
               <div className="flex justify-center">
-                <div className="p-4 bg-white rounded-lg">
-                  <QRCodeSVG value={generatedProof.shareableLink} size={180} />
+                <div className="p-3 bg-white rounded-lg">
+                  <QRCodeSVG value={generatedProof.shareableLink} size={160} />
                 </div>
               </div>
 
-              {/* Proof Details */}
-              <div className="space-y-3 p-4 rounded-lg bg-muted">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Threshold</span>
-                  <Badge variant="success">{formatUSD(generatedProof.threshold)}+</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Created</span>
-                  <span className="text-sm">{format(generatedProof.createdAt, "PPp")}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Expires</span>
-                  <span className="text-sm">{format(generatedProof.expiresAt, "PPp")}</span>
-                </div>
+              <div className="text-center">
+                <Badge variant="success" className="text-sm">
+                  Holds {formatUSD(generatedProof.threshold)}+
+                </Badge>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Expires {formatDistanceToNow(generatedProof.expiresAt, { addSuffix: true })}
+                </p>
               </div>
 
-              {/* Link */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Shareable Link</label>
-                <div className="flex gap-2">
-                  <code className="flex-1 text-xs bg-background px-3 py-2 rounded-md font-mono truncate border">
-                    {generatedProof.shareableLink}
-                  </code>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyLink(generatedProof.shareableLink)}
-                  >
-                    {copied ? (
-                      <Check className="h-4 w-4 text-emerald-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
+              <div className="flex gap-2">
+                <code className="flex-1 text-[10px] bg-muted px-2 py-1.5 rounded font-mono truncate">
+                  {generatedProof.shareableLink}
+                </code>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => copyLink(generatedProof.shareableLink)}
+                >
+                  {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                </Button>
               </div>
-
-              <Button onClick={() => setShowProofDialog(false)} className="w-full">
-                Done
-              </Button>
             </div>
           )}
         </DialogContent>
