@@ -7,10 +7,11 @@ import { TransactionHistory } from "./TransactionHistory";
 import { ProofOfFunds } from "./ProofOfFunds";
 import { ShieldModal } from "./ShieldModal";
 import { WithdrawModal } from "./WithdrawModal";
+import { LandingPage } from "@/components/landing/LandingPage";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useAppStore } from "@/store";
 import { usePublicBalance } from "@/hooks/usePublicBalance";
-import { Shield, Lock, ArrowRightLeft, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { formatUSD, calculatePrivacyScore } from "@/lib/utils";
 import type { ShieldedBalance as ShieldedBalanceType } from "@/types";
 
@@ -45,32 +46,7 @@ export function Dashboard() {
   };
 
   if (!connected) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="relative mb-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 blur-3xl rounded-full" />
-          <Shield className="relative h-16 w-16 text-emerald-500" />
-        </div>
-        <h2 className="text-2xl font-semibold mb-3">Private Portfolio Management</h2>
-        <p className="text-muted-foreground max-w-sm mb-8 text-sm">
-          Connect your wallet to shield tokens and manage your portfolio privately.
-        </p>
-        <div className="flex gap-8 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Eye className="h-4 w-4 text-amber-500" />
-            <span>View exposed assets</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Lock className="h-4 w-4 text-emerald-500" />
-            <span>Shield privately</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ArrowRightLeft className="h-4 w-4 text-blue-500" />
-            <span>Withdraw anywhere</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <LandingPage />;
   }
 
   // Calculate totals for the hero section
