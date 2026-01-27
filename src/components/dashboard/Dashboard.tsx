@@ -65,11 +65,11 @@ export function Dashboard() {
   const privacyScore = calculatePrivacyScore(totalPublicValue, totalShieldedValue);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Hero Section - Total Portfolio Overview */}
-      <div className="text-center py-8">
+      <div className="text-center py-4">
         <p className="text-sm text-muted-foreground mb-2">Total Portfolio Value</p>
-        <h1 className="text-4xl font-bold mb-6">{formatUSD(totalValue)}</h1>
+        <h1 className="text-4xl font-bold mb-4">{formatUSD(totalValue)}</h1>
 
         {/* Privacy indicator */}
         <div className="inline-flex items-center gap-6 px-6 py-3 rounded-full bg-card border border-border">

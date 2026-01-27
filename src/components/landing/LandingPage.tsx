@@ -189,12 +189,12 @@ export function LandingPage() {
               <span>Client-side encryption</span>
             </div>
             <div className="flex items-center gap-2">
-              <FileCheck className="h-4 w-4 text-emerald-500" />
-              <span>Open source</span>
+              <Zap className="h-4 w-4 text-emerald-500" />
+              <span>Instant transactions</span>
             </div>
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-emerald-500" />
-              <span>No KYC required</span>
+              <Wallet className="h-4 w-4 text-emerald-500" />
+              <span>Your keys, your coins</span>
             </div>
           </div>
         </div>

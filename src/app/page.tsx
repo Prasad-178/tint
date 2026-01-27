@@ -10,7 +10,7 @@ export default function Home() {
       </div>
 
       {/* Content */}
-      <div className="relative container max-w-6xl mx-auto px-4 py-8">
+      <div className="relative container max-w-6xl mx-auto px-4 py-4">
         <Dashboard />
       </div>
     </div>
