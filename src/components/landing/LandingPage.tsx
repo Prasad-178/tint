@@ -6,13 +6,13 @@ import {
   Shield,
   Eye,
   EyeOff,
-  ArrowRight,
   Lock,
   Zap,
   FileCheck,
   ShieldCheck,
   Wallet,
   ArrowDownUp,
+  Code,
 } from "lucide-react";
 
 export function LandingPage() {
@@ -39,26 +39,14 @@ export function LandingPage() {
             Withdraw to any wallet without revealing your holdings.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              size="lg"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8"
-              onClick={() => setVisible(true)}
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              Connect Wallet
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              asChild
-            >
-              <a href="https://docs.privacycash.co" target="_blank" rel="noopener noreferrer">
-                Learn how it works
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </a>
-            </Button>
-          </div>
+          <Button
+            size="lg"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-8"
+            onClick={() => setVisible(true)}
+          >
+            <Wallet className="h-4 w-4 mr-2" />
+            Connect Wallet
+          </Button>
         </div>
       </section>
 
@@ -149,48 +137,66 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Trust Section */}
+      {/* Technical Details */}
       <section className="py-16 border-t border-border">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl font-semibold mb-4">Built on Privacy.cash</h2>
-          <p className="text-muted-foreground mb-8">
-            Tint is powered by the Privacy.cash SDK, an open-source protocol for
-            private token transfers on Solana. Your funds are secured by cryptographic
-            proofs, not promises.
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-semibold text-center mb-4">How privacy works</h2>
+          <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12">
+            Your funds are protected by cryptographic techniques, not trusted third parties.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="p-5 rounded-xl border border-border bg-card">
+              <Code className="h-6 w-6 text-emerald-500 mb-3" />
+              <h3 className="font-semibold mb-2 text-sm">Shielded pool</h3>
+              <p className="text-xs text-muted-foreground">
+                Tokens are deposited into a shared pool. When you withdraw, the on-chain
+                link between deposit and withdrawal is broken.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-border bg-card">
+              <Lock className="h-6 w-6 text-emerald-500 mb-3" />
+              <h3 className="font-semibold mb-2 text-sm">Encrypted balances</h3>
+              <p className="text-xs text-muted-foreground">
+                Your shielded balance is encrypted with keys derived from your wallet.
+                Only you can decrypt and view your private holdings.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-xl border border-border bg-card">
+              <ShieldCheck className="h-6 w-6 text-emerald-500 mb-3" />
+              <h3 className="font-semibold mb-2 text-sm">Session wallet</h3>
+              <p className="text-xs text-muted-foreground">
+                A derived keypair handles privacy operations. Your main wallet only signs
+                once to generate the session, then stays disconnected from private actions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust indicators */}
+      <section className="py-12 border-t border-border">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
               <span>Non-custodial</span>
             </div>
             <div className="flex items-center gap-2">
               <Lock className="h-4 w-4 text-emerald-500" />
-              <span>End-to-end encrypted</span>
+              <span>Client-side encryption</span>
             </div>
             <div className="flex items-center gap-2">
               <FileCheck className="h-4 w-4 text-emerald-500" />
               <span>Open source</span>
             </div>
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-emerald-500" />
+              <span>No KYC required</span>
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 border-t border-border">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl font-semibold mb-4">Ready to go private?</h2>
-          <p className="text-muted-foreground mb-8">
-            Connect your wallet to see your exposed assets and start shielding.
-          </p>
-          <Button
-            size="lg"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-8"
-            onClick={() => setVisible(true)}
-          >
-            <Wallet className="h-4 w-4 mr-2" />
-            Get Started
-          </Button>
         </div>
       </section>
     </div>

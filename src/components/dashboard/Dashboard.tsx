@@ -7,17 +7,20 @@ import { TransactionHistory } from "./TransactionHistory";
 import { ProofOfFunds } from "./ProofOfFunds";
 import { ShieldModal } from "./ShieldModal";
 import { WithdrawModal } from "./WithdrawModal";
+import { DashboardSkeleton } from "./DashboardSkeleton";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useAppStore } from "@/store";
 import { usePublicBalance } from "@/hooks/usePublicBalance";
+import { useShieldedBalance } from "@/hooks/useShieldedBalance";
 import { Eye, EyeOff } from "lucide-react";
 import { formatUSD, calculatePrivacyScore } from "@/lib/utils";
 import type { ShieldedBalance as ShieldedBalanceType } from "@/types";
 
 export function Dashboard() {
   const { connected } = useWallet();
-  const { balances: publicBalances } = usePublicBalance();
+  const { balances: publicBalances, isLoading: isLoadingPublic } = usePublicBalance();
+  const { isLoading: isLoadingShielded, isInitialized } = useShieldedBalance();
   const shieldedBalances = useAppStore((state) => state.shieldedBalances) as ShieldedBalanceType[];
 
   const [shieldModal, setShieldModal] = useState<{
@@ -47,6 +50,12 @@ export function Dashboard() {
 
   if (!connected) {
     return <LandingPage />;
+  }
+
+  // Show skeleton while initial data is loading
+  const isInitialLoading = (isLoadingPublic && publicBalances.length === 0) || !isInitialized;
+  if (isInitialLoading) {
+    return <DashboardSkeleton />;
   }
 
   // Calculate totals for the hero section
