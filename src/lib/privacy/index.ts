@@ -282,9 +282,15 @@ class ClientPrivacyClient {
       const cachedKeypair = getCachedSessionKeypair(walletAddress);
       if (cachedKeypair) {
         this.sessionKeypair = cachedKeypair;
-        console.log("Using cached session keypair from localStorage:", cachedKeypair.publicKey.toBase58());
+        console.log("Found session keypair in localStorage:", cachedKeypair.publicKey.toBase58());
         // Sync to database (migrate localStorage session to DB)
-        await saveSessionToDatabase(walletAddress, cachedKeypair);
+        console.log("Migrating session from localStorage to database...");
+        try {
+          await saveSessionToDatabase(walletAddress, cachedKeypair);
+          console.log("✅ Session successfully migrated to database!");
+        } catch (err) {
+          console.error("⚠️ Failed to migrate session to database:", err);
+        }
         return this.sessionKeypair;
       }
 
