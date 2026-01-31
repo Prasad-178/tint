@@ -13,6 +13,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useAppStore } from "@/store";
 import { usePublicBalance } from "@/hooks/usePublicBalance";
 import { useShieldedBalance } from "@/hooks/useShieldedBalance";
+import { useSessionBalance } from "@/hooks/useSessionBalance";
 import { Eye, EyeOff } from "lucide-react";
 import { formatUSD, calculatePrivacyScore } from "@/lib/utils";
 import type { ShieldedBalance as ShieldedBalanceType } from "@/types";
@@ -20,7 +21,8 @@ import type { ShieldedBalance as ShieldedBalanceType } from "@/types";
 export function Dashboard() {
   const { connected } = useWallet();
   const { balances: publicBalances, isLoading: isLoadingPublic } = usePublicBalance();
-  const { isLoading: isLoadingShielded, isInitialized } = useShieldedBalance();
+  const { isInitialized } = useShieldedBalance();
+  const { balances: sessionBalances } = useSessionBalance();
   const shieldedBalances = useAppStore((state) => state.shieldedBalances) as ShieldedBalanceType[];
 
   const [shieldModal, setShieldModal] = useState<{
@@ -61,7 +63,10 @@ export function Dashboard() {
   // Calculate totals for the hero section
   const totalPublicValue = publicBalances.reduce((acc, b) => acc + (b.usdValue || 0), 0);
   const totalShieldedValue = shieldedBalances.reduce((acc, b) => acc + (b.usdValue || 0), 0);
-  const totalValue = totalPublicValue + totalShieldedValue;
+  const totalSessionValue = sessionBalances.reduce((acc, b) => acc + (b.usdValue || 0), 0);
+  // Total includes: main wallet (public) + privacy pool (shielded) + session wallet (deposit address)
+  const totalValue = totalPublicValue + totalShieldedValue + totalSessionValue;
+  // Privacy score only considers public vs shielded (session funds are in-transit, not exposed)
   const privacyScore = calculatePrivacyScore(totalPublicValue, totalShieldedValue);
 
   return (
