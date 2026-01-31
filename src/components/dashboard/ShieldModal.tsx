@@ -50,7 +50,7 @@ export function ShieldModal({ isOpen, onClose, tokenMint, maxAmount, isFromSessi
     return balance?.amount || 0;
   }, [sessionBalances]);
 
-  const hasSufficientSolForFees = sessionSolBalance >= 0.005;
+  const hasSufficientSolForFees = sessionSolBalance >= 0.003;
   const canShieldFromSession = sessionTokenBalance > 0 && hasSufficientSolForFees;
 
   // Update amount when session token balance changes
@@ -105,7 +105,7 @@ export function ShieldModal({ isOpen, onClose, tokenMint, maxAmount, isFromSessi
     }
 
     if (!hasSufficientSolForFees) {
-      setError(`Need at least 0.005 SOL for fees. Current: ${sessionSolBalance.toFixed(4)} SOL`);
+      setError(`Need at least 0.003 SOL for fees. Current: ${sessionSolBalance.toFixed(4)} SOL`);
       return;
     }
 
@@ -332,14 +332,14 @@ export function ShieldModal({ isOpen, onClose, tokenMint, maxAmount, isFromSessi
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">SOL (for fees)</span>
-                  <span className={sessionSolBalance >= 0.005 ? "text-emerald-500 font-medium" : "text-amber-500"}>
-                    {sessionSolBalance >= 0.005 ? (
+                  <span className={sessionSolBalance >= 0.003 ? "text-emerald-500 font-medium" : "text-amber-500"}>
+                    {sessionSolBalance >= 0.003 ? (
                       <span className="flex items-center gap-1">
                         <CheckCircle2 className="h-3 w-3" />
                         {sessionSolBalance.toFixed(4)}
                       </span>
                     ) : sessionSolBalance > 0 ? (
-                      `${sessionSolBalance.toFixed(4)} (need 0.005+)`
+                      `${sessionSolBalance.toFixed(4)} (need 0.003+)`
                     ) : (
                       <span className="flex items-center gap-1">
                         <Loader2 className="h-3 w-3 animate-spin" />

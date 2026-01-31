@@ -87,7 +87,7 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
   const totalShieldedUsd = shieldedBalances.reduce((acc, b) => acc + (b.usdValue || 0), 0);
   const sessionSolBalance = sessionBalances.find(b => b.token.symbol === "SOL")?.amount || 0;
   const hasSessionTokens = sessionBalances.some(b => b.amount > 0 && b.token.symbol !== "SOL");
-  const hasSolForFees = sessionSolBalance >= 0.005;
+  const hasSolForFees = sessionSolBalance >= 0.003;
   const hasShieldedAssets = shieldedBalances.some(b => b.amount > 0);
 
   return (
@@ -232,7 +232,7 @@ export function ShieldedBalance({ onWithdrawClick, onShieldFromSessionClick }: S
                 ))}
                 {!hasSolForFees && hasSessionTokens && (
                   <p className="text-[10px] text-amber-500 mt-1">
-                    Need 0.005 SOL for fees
+                    Need 0.003 SOL for fees
                   </p>
                 )}
               </div>

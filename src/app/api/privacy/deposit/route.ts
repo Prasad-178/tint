@@ -4,8 +4,8 @@ import { USDC_MINT, SOL_MINT, USDT_MINT } from "@/lib/solana/constants";
 import { Connection, Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 
-// Minimum SOL required for transaction fees (Privacy Cash needs ~0.005 SOL)
-const MIN_SOL_FOR_FEES = 0.005 * LAMPORTS_PER_SOL;
+// Minimum SOL required for transaction fees (Privacy Cash needs ~0.003 SOL)
+const MIN_SOL_FOR_FEES = 0.003 * LAMPORTS_PER_SOL;
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
