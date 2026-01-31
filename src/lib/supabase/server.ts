@@ -1,24 +1,26 @@
 /**
  * Supabase Client - Server Side
- * 
+ *
  * This client is used for server-side operations (API routes).
  * Uses the service role key for admin operations.
- * 
- * Supabase is OPTIONAL - returns null if not configured.
+ *
+ * Supabase is REQUIRED for session persistence across devices.
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Create a server-side Supabase client with service role
- * Returns null if Supabase is not configured
+ * Throws error if Supabase is not configured
  */
-export function createServiceClient(): SupabaseClient | null {
+export function createServiceClient(): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    return null;
+    throw new Error(
+      'Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY environment variables.'
+    );
   }
 
   return createClient(supabaseUrl, supabaseServiceKey, {
@@ -32,6 +34,6 @@ export function createServiceClient(): SupabaseClient | null {
 /**
  * Check if Supabase server operations are available
  */
-export function isSupabaseServerConfigured(): boolean {
+export function isSupabaseConfigured(): boolean {
   return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY);
 }

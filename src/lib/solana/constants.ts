@@ -56,8 +56,5 @@ export const getTokenBySymbol = (symbol: string): TokenInfo | undefined => {
   return SUPPORTED_TOKENS.find((t) => t.symbol === symbol);
 };
 
-// Default RPC endpoints
-export const RPC_ENDPOINTS = {
-  mainnet: process.env.NEXT_PUBLIC_HELIUS_RPC_URL || "https://api.mainnet-beta.solana.com",
-  devnet: "https://api.devnet.solana.com",
-};
+// Mainnet RPC endpoint (Helius recommended for production)
+export const MAINNET_RPC_URL = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || "https://api.mainnet-beta.solana.com";

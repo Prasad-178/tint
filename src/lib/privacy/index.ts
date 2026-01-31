@@ -118,7 +118,8 @@ export function exportCurrentSessionKeypair(walletAddress: string): string | nul
 }
 
 /**
- * Fetch session keypair from database (if Supabase is configured)
+ * Fetch session keypair from database
+ * Database is the primary storage for session persistence
  */
 async function fetchSessionFromDatabase(walletAddress: string): Promise<Keypair | null> {
   try {
@@ -129,37 +130,44 @@ async function fetchSessionFromDatabase(walletAddress: string): Promise<Keypair 
       },
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.sessionKeypair) {
-        const secretKey = new Uint8Array(Buffer.from(data.sessionKeypair, "base64"));
-        if (secretKey.length === 64) {
-          return Keypair.fromSecretKey(secretKey);
-        }
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Failed to fetch session from database:', error);
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.sessionKeypair) {
+      const secretKey = new Uint8Array(Buffer.from(data.sessionKeypair, "base64"));
+      if (secretKey.length === 64) {
+        return Keypair.fromSecretKey(secretKey);
       }
     }
+    return null;
   } catch (error) {
-    console.warn('Failed to fetch session from database:', error);
+    console.error('Failed to fetch session from database:', error);
+    return null;
   }
-  return null;
 }
 
 /**
- * Save session keypair to database (if Supabase is configured)
+ * Save session keypair to database
+ * Database is the primary storage for session persistence
  */
 async function saveSessionToDatabase(walletAddress: string, keypair: Keypair): Promise<void> {
-  try {
-    const sessionKeypairBase64 = Buffer.from(keypair.secretKey).toString("base64");
-    await fetch('/api/session', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-wallet-address': walletAddress,
-      },
-      body: JSON.stringify({ sessionKeypairBase64 }),
-    });
-  } catch (error) {
-    console.warn('Failed to save session to database:', error);
+  const sessionKeypairBase64 = Buffer.from(keypair.secretKey).toString("base64");
+  const response = await fetch('/api/session', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-wallet-address': walletAddress,
+    },
+    body: JSON.stringify({ sessionKeypairBase64 }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to save session to database');
   }
 }
 
@@ -237,7 +245,8 @@ class ClientPrivacyClient {
 
   /**
    * Get or create a session keypair for privacy operations
-   * Priority: 1. In-memory cache, 2. Database (cross-device), 3. localStorage, 4. New signature
+   * Priority: 1. In-memory cache, 2. Database (primary), 3. localStorage (fallback), 4. New signature
+   * Database is the source of truth for cross-device persistence.
    */
   async getSessionKeypair(): Promise<Keypair> {
     if (!this.config) {
@@ -258,17 +267,7 @@ class ClientPrivacyClient {
 
     // Start the request and store the promise
     this.sessionKeypairPromise = (async () => {
-      // 1. Try to restore from localStorage first (fastest)
-      const cachedKeypair = getCachedSessionKeypair(walletAddress);
-      if (cachedKeypair) {
-        this.sessionKeypair = cachedKeypair;
-        console.log("Using cached session keypair from localStorage:", cachedKeypair.publicKey.toBase58());
-        // Sync to database in background (for cross-device access)
-        saveSessionToDatabase(walletAddress, cachedKeypair).catch(() => {});
-        return this.sessionKeypair;
-      }
-
-      // 2. Try to fetch from database (for cross-device persistence)
+      // 1. Try to fetch from database FIRST (source of truth for cross-device)
       console.log("Checking database for session...");
       const dbKeypair = await fetchSessionFromDatabase(walletAddress);
       if (dbKeypair) {
@@ -276,6 +275,16 @@ class ClientPrivacyClient {
         // Cache in localStorage for faster subsequent loads
         cacheSessionKeypair(walletAddress, dbKeypair);
         console.log("Restored session keypair from database:", dbKeypair.publicKey.toBase58());
+        return this.sessionKeypair;
+      }
+
+      // 2. Fallback to localStorage (for migration or if DB was temporarily unavailable)
+      const cachedKeypair = getCachedSessionKeypair(walletAddress);
+      if (cachedKeypair) {
+        this.sessionKeypair = cachedKeypair;
+        console.log("Using cached session keypair from localStorage:", cachedKeypair.publicKey.toBase58());
+        // Sync to database (migrate localStorage session to DB)
+        await saveSessionToDatabase(walletAddress, cachedKeypair);
         return this.sessionKeypair;
       }
 
@@ -287,11 +296,11 @@ class ClientPrivacyClient {
       this.sessionKeypair = deriveSessionKeypair(signature);
       console.log("Created new session keypair:", this.sessionKeypair.publicKey.toBase58());
 
-      // Cache the full keypair in localStorage
+      // Save to database FIRST (primary storage)
+      await saveSessionToDatabase(walletAddress, this.sessionKeypair);
+
+      // Also cache in localStorage for faster loads
       cacheSessionKeypair(walletAddress, this.sessionKeypair);
-      
-      // Also save to database for cross-device access
-      saveSessionToDatabase(walletAddress, this.sessionKeypair).catch(() => {});
 
       return this.sessionKeypair;
     })();

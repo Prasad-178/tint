@@ -39,9 +39,13 @@ function WalletConnectionHandler({ children }: { children: React.ReactNode }) {
 }
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-  // Use Helius RPC or fallback to mainnet
+  // Use Helius RPC for mainnet (required for production)
   const endpoint = useMemo(() => {
-    return process.env.NEXT_PUBLIC_HELIUS_RPC_URL || clusterApiUrl("mainnet-beta");
+    const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL;
+    if (!rpcUrl) {
+      console.warn("NEXT_PUBLIC_HELIUS_RPC_URL not set, using public mainnet RPC");
+    }
+    return rpcUrl || clusterApiUrl("mainnet-beta");
   }, []);
 
   const wallets = useMemo(

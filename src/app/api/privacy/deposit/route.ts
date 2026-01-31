@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Mainnet RPC - Helius recommended for production
     const rpcUrl = process.env.NEXT_PUBLIC_HELIUS_RPC_URL || "https://api.mainnet-beta.solana.com";
 
     // Parse and validate session keypair

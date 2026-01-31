@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServiceClient, isSupabaseServerConfigured } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/session - Fetch stored session keypair for a wallet
- * 
- * This endpoint returns the stored session keypair from Supabase (if configured).
- * If Supabase is not configured, returns null (client will use localStorage).
+ *
+ * This endpoint returns the stored session keypair from Supabase.
+ * Supabase is REQUIRED for session persistence.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -18,16 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // If Supabase is not configured, return null
-    // The client will fall back to localStorage
-    if (!isSupabaseServerConfigured()) {
-      return NextResponse.json({ sessionKeypair: null });
-    }
-
     const supabase = createServiceClient();
-    if (!supabase) {
-      return NextResponse.json({ sessionKeypair: null });
-    }
 
     const { data: user, error } = await supabase
       .from('users')
@@ -36,9 +27,12 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      // PGRST116 = no rows returned, which is fine
+      // PGRST116 = no rows returned, which is fine for new users
       console.error('Error fetching session:', error);
-      return NextResponse.json({ sessionKeypair: null });
+      return NextResponse.json(
+        { error: 'Failed to fetch session' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -46,16 +40,18 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Session fetch error:', error);
-    // Return null instead of error - client will use localStorage
-    return NextResponse.json({ sessionKeypair: null });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to fetch session' },
+      { status: 500 }
+    );
   }
 }
 
 /**
  * POST /api/session - Store session keypair for a wallet
- * 
- * This endpoint stores the session keypair in Supabase (if configured).
- * If Supabase is not configured, returns success (client uses localStorage anyway).
+ *
+ * This endpoint stores the session keypair in Supabase.
+ * Supabase is REQUIRED for session persistence.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -78,17 +74,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If Supabase is not configured, just return success
-    // The client stores in localStorage anyway
-    if (!isSupabaseServerConfigured()) {
-      console.log('Supabase not configured, session stored in localStorage only');
-      return NextResponse.json({ success: true, storage: 'localStorage' });
-    }
-
     const supabase = createServiceClient();
-    if (!supabase) {
-      return NextResponse.json({ success: true, storage: 'localStorage' });
-    }
 
     // Upsert user with session keypair
     const { error } = await supabase
@@ -107,14 +93,18 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error saving session:', error);
-      // Return success anyway - localStorage will work
-      return NextResponse.json({ success: true, storage: 'localStorage' });
+      return NextResponse.json(
+        { error: 'Failed to save session' },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ success: true, storage: 'supabase' });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Session save error:', error);
-    // Return success - client uses localStorage as backup
-    return NextResponse.json({ success: true, storage: 'localStorage' });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to save session' },
+      { status: 500 }
+    );
   }
 }
